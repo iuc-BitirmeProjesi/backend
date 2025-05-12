@@ -4,10 +4,7 @@ import { cors } from 'hono/cors';
 import { bearerAuth } from 'hono/bearer-auth';
 import { drizzle } from 'drizzle-orm/libsql/node';
 import { Variables } from './types';
-
-// Routes
-import users from './modules/users/route';
-import auth from './modules/auth/route';
+import api from './modules/index';
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -26,7 +23,7 @@ app.use('*', async (c, next) => {
     return next();
 });
 
-app.get('/', (c) => c.text('Hello Node!'));
+app.get('/', (c) => c.text('Hello!'));
 
 app.post('/query', async (c) => {
     try {
@@ -40,13 +37,7 @@ app.post('/query', async (c) => {
     }
 });
 
-app.route('/auth', auth);
-
-const token = 'honoiscool';
-
-app.use('/api/*', bearerAuth({ token }));
-
-app.route('/users', users);
+app.route('/api', api);
 
 serve({
     fetch: app.fetch,
