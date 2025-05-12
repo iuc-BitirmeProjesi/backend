@@ -31,7 +31,7 @@ app.get('/all', async (c) => {
 app.get('/:id', async (c) => {
     try {
         const db = c.var.db;
-        const id = c.req.header('id');
+        const id = c.req.param('id');
         if (!id) throw new Error('Organization ID is required');
         const userId = c.var.jwtPayload.userId;
 
