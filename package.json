@@ -6,14 +6,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:migrate": "drizzle-kit migrate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.9.0",
   "dependencies": {
+    "@libsql/client": "^0.15.5",
     "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.5.0",
     "drizzle-orm": "^0.43.1",
     "hono": "^4.7.9",
     "zod": "^3.24.4"

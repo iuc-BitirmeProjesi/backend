@@ -1,13 +1,10 @@
-// We won't import Config for a moment to see if we can bypass the problematic inference
-// import type { Config } from 'drizzle-kit';
+import { defineConfig } from 'drizzle-kit';
 
-export default {
-  schema: './src/db/schema.ts',
+export default defineConfig({
   out: './drizzle',
-  dialect: 'sqlite', 
+  schema: './src/db/schema.ts',
+  dialect: 'sqlite',
   dbCredentials: {
-    url: './database.db',    // The value is correct
+    url: 'database.db',
   },
-  verbose: true,
-  strict: true,
-}; // Remove "satisfies Config" for now
+});
