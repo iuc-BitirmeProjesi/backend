@@ -41,7 +41,10 @@ export const roles = sqliteTable('roles', {
     }),
     name: text('name').notNull(),
     description: text('description'),
-    scope: text('scope', ['project', 'organization']).notNull(),
+    scope: text('scope', {
+        enum: ['organization', 'project'],
+        mode: 'text',
+    }).notNull(),
     organizationId: int('organization_id').references(() => organizations.id),
     permissionFlags: text('permission_flags').notNull(), //this will be a json string
     createdAt: int({ mode: 'number' })
