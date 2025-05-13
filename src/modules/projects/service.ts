@@ -8,7 +8,7 @@ export type Project = {
     name: string;
     projectType: number;
     description?: string;
-    // labelConfig?: string; this doesnt have a value right now
+    // labelConfig?: string; this doesn't have a value right now.
 }
 
 //get all projects with userId

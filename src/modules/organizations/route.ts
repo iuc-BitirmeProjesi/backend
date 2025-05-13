@@ -109,7 +109,7 @@ app.delete('/:id', async (c) => {
         const result = await deleteOrganization(db, Number(id), userId);
         if (!result.success) throw new Error(result.error);
 
-        return c.json({ message: 'Organization deleted successfully' });
+        return c.json({ data: result.data });
     } catch (error) {
         console.error('Error in delete organization route:', error);
         return c.json({ error: 'Failed to delete organization' }, 500);
