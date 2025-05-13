@@ -2,7 +2,7 @@
 
 import { drizzle } from 'drizzle-orm/libsql/node';
 import bcrypt from 'bcryptjs';
-import { roles, users } from './src/db/schema';
+import { roles, users,project_type } from './src/db/schema';
 
 import { config } from 'dotenv';
 config();
@@ -39,4 +39,10 @@ config();
         scope: 'organization',
         permissionFlags: JSON.stringify({ admin: true }),
     });
+
+    //insert into project_types table for seeding
+    await db.insert(project_type).values([
+        { id: 1, name: 'classification' },
+        { id: 2, name: 'object detection' },
+    ]);
 })();

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { loginUser } from './service';
-import { UserLogin } from './types'; // Assuming you create a types.ts file
-import { Variables } from '../../types';
+import type { UserLogin } from './types'; // Assuming you create a types.ts file
+import type { Variables } from '../../types';
 
 const auth = new Hono<{ Variables: Variables }>()
 
@@ -11,18 +11,18 @@ auth.post('/login', async (c) => {
         const body = await c.req.json<UserLogin>();
         const result = await loginUser(c.var.db, body);
 
-        if ('error' in result) {
-            return c.json({ error: result.error });
-        }
+        if (!result.success) throw new Error(result.error);
 
-        return c.json({ token: result.token });
+        return c.json({ token: result.data });
     } catch (error) {
         console.error('Login route error:', error);
-        // Check if it's a JSON parsing error
-        if (error instanceof SyntaxError) {
-            return c.json({ error: 'Invalid JSON payload' }, 400);
-        }
-        return c.json({ error: 'Failed to process login request' }, 500);
+        return c.json(
+            {
+                error: 'Failed to login',
+                message: error.message || 'Internal server error',
+            },
+            500
+        );
     }
 });
 

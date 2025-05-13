@@ -1,7 +1,5 @@
-import { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
-import { payloadType } from './modules/auth/types';
-
-type Env = {};
+import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
+import type { payloadType } from './modules/auth/types';
 
 export type Variables = {
     db: LibSQLDatabase;

@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
-// import { bearerAuth } from 'hono/bearer-auth';
-import { Variables } from '../types';
+import type { Variables } from '../types';
+import { jwt } from 'hono/jwt';
+import type { payloadType } from './auth/types';
 
 import users from './users/route';
 import auth from './auth/route';
 import organizations from './organizations/route';
-import { jwt } from 'hono/jwt';
-import { payloadType } from './auth/types';
+import projects from './projects/route';
+
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -28,5 +29,7 @@ app.get('/', (c) => {
 app.route('/users', users);
 
 app.route('/organizations', organizations);
+
+app.route('/projects', projects);
 
 export default app;
