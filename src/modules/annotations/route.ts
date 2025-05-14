@@ -6,8 +6,8 @@ import {
 	createAnnotation,
 	// updateAnnotation, these are not implemented yet
 	// deleteAnnotation, these are not implemented yet
-	type Annotation,
 } from "./service";
+import type { annotations } from "../../db/schema";
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -60,10 +60,10 @@ app.post("/", async (c) => {
 		const userId = payload.userId;
 
 		// Parse the request body
-		const body = await c.req.json<Annotation>();
+		const body = await c.req.json<typeof annotations.$inferInsert>();
 
 		// Set the user ID to the current user
-		const annotationData: Annotation = {
+		const annotationData: typeof annotations.$inferInsert = {
 			...body,
 			userId: userId,
 		};

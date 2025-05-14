@@ -27,8 +27,8 @@ app.get('/:id', async (c) => {
 app.put('/:id', async (c) => {
     try {
         const db = c.var.db;
-
         const id = c.req.param('id');
+
         if (!id) throw new Error('User ID is required');
 
         // Parse the request body
