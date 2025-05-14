@@ -2,17 +2,6 @@ import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { annotations,users } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
-export type Annotation = {
-    id?: number;
-    taskId: number;
-    userId: number;
-    projectId: number;
-    annotationData: string;
-    isGroundTruth: boolean;
-    reviewStatus: string;
-    reviewerId: number;
-}
-
 //get all annotations with userId
 export const getAnnotations = async (
     db: LibSQLDatabase,
@@ -20,18 +9,7 @@ export const getAnnotations = async (
 ) => {
     try {
         const result = await db
-            .select({
-                id: annotations.id,
-                taskId: annotations.taskId,
-                userId: annotations.userId,
-                projectId: annotations.projectId,
-                annotationData: annotations.annotationData,
-                isGroundTruth: annotations.isGroundTruth,
-                reviewStatus: annotations.reviewStatus,
-                reviewerId: annotations.reviewerId,
-                createdAt: annotations.createdAt,
-                updatedAt: annotations.updatedAt,
-            })
+            .select()
             .from(annotations)
             .where(eq(annotations.userId, userId))
             .orderBy(desc(annotations.createdAt))
@@ -51,16 +29,7 @@ export const getAnnotationById = async (
 ) => {
     try {
         const result = await db
-            .select({
-                id: annotations.id,
-                taskId: annotations.taskId,
-                userId: annotations.userId,
-                projectId: annotations.projectId,
-                annotationData: annotations.annotationData,
-                isGroundTruth: annotations.isGroundTruth,
-                reviewStatus: annotations.reviewStatus,
-                reviewerId: annotations.reviewerId,
-            })
+            .select()
             .from(annotations)
             .where(and(eq(annotations.userId, userId), eq(annotations.id, id)))
             .get();
@@ -74,7 +43,7 @@ export const getAnnotationById = async (
 //Create annotation
 export const createAnnotation = async (
     db: LibSQLDatabase,
-    body: Annotation
+    body: typeof annotations.$inferInsert
 ) => {
     try {
         const result = await db

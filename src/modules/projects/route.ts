@@ -6,8 +6,8 @@ import {
     createProject,
     updateProject,
     deleteProject,
-    type Project,
 } from './service';
+import type { projects } from "../../db/schema";
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -51,10 +51,10 @@ app.post('/', async (c) => {
         const userId = payload.userId;
 
         // Parse the request body
-        const body = await c.req.json<Project>();
+        const body = await c.req.json<typeof projects.$inferInsert>();
 
 
-        const projectData: Project = {
+        const projectData: typeof projects.$inferInsert = {
             organizationId: body.organizationId,
             name: body.name,
             description: body.description,
@@ -82,9 +82,9 @@ app.put('/:id', async (c) => {
         const userId = payload.userId;
 
         // Parse the request body
-        const body = await c.req.json<Project>();
+        const body = await c.req.json<typeof projects.$inferInsert>();
 
-        const projectData: Project = {
+        const projectData: typeof projects.$inferInsert = {
             organizationId: body.organizationId,
             name: body.name,
             description: body.description,

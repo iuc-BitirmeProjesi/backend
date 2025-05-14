@@ -2,16 +2,6 @@ import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { organizations, organization_relations, roles } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
-// Type definition for organization
-export type Organization = {
-    id?: number;
-    ownerId: number;
-    name: string;
-    logo?: string;
-    description?: string;
-    isActiveOrg?: boolean;
-};
-
 // Get all organizations
 export const getUsersOrganizations = async (
     db: LibSQLDatabase,
@@ -70,7 +60,7 @@ export const getOrganizationById = async (
 // Create organization
 export const createOrganization = async (
     db: LibSQLDatabase,
-    organizationData: Organization,
+    organizationData: typeof organizations.$inferInsert,
     userId: number
 ) => {
     try {
@@ -116,7 +106,7 @@ export const updateOrganization = async (
     db: LibSQLDatabase,
     id: number,
     userId: number,
-    organizationData: Partial<Organization>
+    organizationData: Partial<typeof organizations.$inferInsert>
 ) => {
     try {
         // Check if organization exists

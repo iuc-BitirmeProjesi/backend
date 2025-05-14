@@ -2,13 +2,6 @@ import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { users } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
-export type User = {
-    id?: number;
-    email: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-}
-
 //get user info by id
 export const getUserInfo = async (
     db: LibSQLDatabase,
@@ -36,7 +29,7 @@ export const getUserInfo = async (
 export const updateUserInfo = async (
     db: LibSQLDatabase,
     id: number,
-    body: User
+    body: typeof users.$inferInsert
 ) => {
     try {
         const result = await db
