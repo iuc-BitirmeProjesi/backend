@@ -1,5 +1,5 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
-import { projects, project_relations, roles } from '../../db/schema';
+import { projects, project_relations, roles, organizations } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 //get all projects with userId
@@ -9,11 +9,26 @@ export const getProjects = async (
 ) => {
     try {
         const result = await db
-            .select()
+            .select({
+                id: projects.id,
+                organizationId: organizations.id,
+                organizationName: organizations.name,
+                organizationLogo: organizations.logo,
+                name: projects.name,
+                description: projects.description,
+                projectType: projects.projectType,
+                roleId: project_relations.roleId,
+                createdAt: projects.createdAt,
+                updatedAt: projects.updatedAt,
+            })
             .from(projects)
             .innerJoin(
                 project_relations,
                 eq(projects.id, project_relations.projectId)
+            )
+            .innerJoin(
+                organizations,
+                eq(projects.organizationId, organizations.id)
             )
             .where(eq(project_relations.userId,userId))
             .orderBy(desc(projects.createdAt))

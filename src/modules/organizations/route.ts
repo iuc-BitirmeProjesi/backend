@@ -6,8 +6,8 @@ import {
     createOrganization,
     updateOrganization,
     deleteOrganization,
-    type Organization,
 } from './service';
+import type { organizations } from '../../db/schema';
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -54,10 +54,10 @@ app.post('/', async (c) => {
         const userId = payload.userId;
 
         // Parse the request body
-        const body = await c.req.json<Organization>();
+        const body = await c.req.json<typeof organizations.$inferInsert>();
 
         // Set the owner ID to the current user
-        const orgData: Organization = {
+        const orgData: typeof organizations.$inferInsert = {
             ownerId: userId,
             name: body.name,
             logo: body.logo,
@@ -83,7 +83,7 @@ app.put('/:id', async (c) => {
         if (!id) throw new Error('Organization ID is required');
 
         // Parse the request body
-        const body = await c.req.json<Partial<Organization>>();
+        const body = await c.req.json<Partial<typeof organizations.$inferInsert>>();
 
         // Validate that at least one field is provided for update
         if (Object.keys(body).length === 0) throw new Error('No fields provided for update');
