@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import { Variables } from '../../types';
+import type { Variables } from '../../types';
 import {
     getUsersOrganizations,
     getOrganizationById,
     createOrganization,
     updateOrganization,
     deleteOrganization,
-    Organization,
+    type Organization,
 } from './service';
 
 const app = new Hono<{ Variables: Variables }>();
@@ -67,7 +67,7 @@ app.post('/', async (c) => {
         const result = await createOrganization(db, orgData, userId);
         if (!result.success) throw new Error(result.error);
 
-        return c.json(result.success, 201);
+        return c.json({data: result.data});
     } catch (error) {
         console.error('Error in create organization route:', error);
         return c.json({ error: 'Failed to create organization' }, 500);
@@ -109,7 +109,7 @@ app.delete('/:id', async (c) => {
         const result = await deleteOrganization(db, Number(id), userId);
         if (!result.success) throw new Error(result.error);
 
-        return c.json({ message: 'Organization deleted successfully' });
+        return c.json({ data: result.data });
     } catch (error) {
         console.error('Error in delete organization route:', error);
         return c.json({ error: 'Failed to delete organization' }, 500);

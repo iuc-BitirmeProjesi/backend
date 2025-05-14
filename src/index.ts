@@ -3,7 +3,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { bearerAuth } from 'hono/bearer-auth';
 import { drizzle } from 'drizzle-orm/libsql/node';
-import { Variables } from './types';
+
+import type { Variables } from './types';
 import api from './modules/index';
 
 const app = new Hono<{ Variables: Variables }>();
@@ -31,7 +32,8 @@ app.post('/query', async (c) => {
         const { query } = await c.req.json();
         const result = await db.run(query);
         return c.json(result);
-    } catch (error: any) {
+ 
+    } catch (error) {
         console.error('Error executing query:', error);
         return c.json({ error: 'Failed to execute query', message: error.message }, 500);
     }

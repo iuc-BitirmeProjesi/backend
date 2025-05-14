@@ -1,4 +1,4 @@
-import { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
+import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { organizations, organization_relations, roles } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
@@ -26,7 +26,8 @@ export const getUsersOrganizations = async (
                 eq(organizations.id, organization_relations.organizationId)
             )
             .where(eq(organization_relations.userId, userId))
-            .orderBy(desc(organizations.createdAt));
+            .orderBy(desc(organizations.createdAt))
+            .all();
 
         return { data: result, success: true };
     } catch (error) {
