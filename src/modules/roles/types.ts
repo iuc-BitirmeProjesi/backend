@@ -1,4 +1,5 @@
 type OrganizationPermissionFlags = {
+    admin: boolean;
     editOrganization: boolean;
     deleteOrganization: boolean;
     editMembers: boolean;
@@ -6,6 +7,7 @@ type OrganizationPermissionFlags = {
     editProjects: boolean;
     createProjects: boolean;
     deleteProjects: boolean;
+
 }
 
 type ProjectPermissionFlags = {
