@@ -46,7 +46,11 @@ export const roles = sqliteTable('roles', {
         mode: 'text',
     }).notNull(),
     organizationId: int('organization_id').references(() => organizations.id),
-    permissionFlags: text('permission_flags').notNull(), //this will be a json string
+    permissionFlags: text('permission_flags',
+        {
+            mode: "json"
+        }
+    ).notNull(), //this will be a json string
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
