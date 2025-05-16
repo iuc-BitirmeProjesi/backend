@@ -8,6 +8,7 @@ import auth from './auth/route';
 import organizations from './organizations/route';
 import projects from './projects/route';
 import annotations from './annotations/route';
+import roles from './roles/route';
 
 
 const app = new Hono<{ Variables: Variables }>();
@@ -34,5 +35,8 @@ app.route('/organizations', organizations);
 app.route('/projects', projects);
 
 app.route('/annotations', annotations);
+
+app.route('/roles', roles);
+
 
 export default app;

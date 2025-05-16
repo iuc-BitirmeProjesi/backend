@@ -1,4 +1,4 @@
-type OrganizationPermissionFlags = {
+export type OrganizationPermissionFlags = {
     admin: boolean;
     editOrganization: boolean;
     deleteOrganization: boolean;
@@ -7,13 +7,20 @@ type OrganizationPermissionFlags = {
     editProjects: boolean;
     createProjects: boolean;
     deleteProjects: boolean;
-
 }
 
-type ProjectPermissionFlags = {
+export type ProjectPermissionFlags = {
     editProject: boolean;
     deleteProject: boolean;
     editMembers: boolean;
     editRoles: boolean;
     uploadFiles: boolean;    
 }
+
+export type PermissionFlagsContainer = {
+    organization: OrganizationPermissionFlags;
+    project: ProjectPermissionFlags;
+}
+
+export type PermissionFlags = PermissionFlagsContainer;
+
