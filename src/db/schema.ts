@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { sqliteTable, text, int } from 'drizzle-orm/sqlite-core';
+import type { OrganizationPermissionFlags, ProjectPermissionFlags } from '../modules/organizationRoles/types';
 
 export const users = sqliteTable('users', {
     id: int('id').primaryKey({
@@ -35,22 +36,18 @@ export const organizations = sqliteTable('organizations', {
         .default(sql`(unixepoch())`),
 });
 
-export const roles = sqliteTable('roles', {
+export const organizationRoles = sqliteTable('organization_roles', {
     id: int('id').primaryKey({
         autoIncrement: true,
     }),
     name: text('name').notNull(),
     description: text('description'),
-    scope: text('scope', {
-        enum: ['organization', 'project'],
-        mode: 'text',
-    }).notNull(),
     organizationId: int('organization_id').references(() => organizations.id),
     permissionFlags: text('permission_flags',
         {
             mode: "json"
         }
-    ).notNull(), //this will be a json string
+    ).notNull().$type<OrganizationPermissionFlags>(),
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -59,7 +56,27 @@ export const roles = sqliteTable('roles', {
         .default(sql`(unixepoch())`),
 });
 
-export const organization_relations = sqliteTable('organization_relations', {
+export const projectRoles = sqliteTable('project_roles', {
+    id: int('id').primaryKey({
+        autoIncrement: true,
+    }),
+    name: text('name').notNull(),
+    description: text('description'),
+    organizationId: int('organization_id').references(() => organizations.id),
+    permissionFlags: text('permission_flags',
+        {
+            mode: "json"
+        }
+    ).notNull().$type<ProjectPermissionFlags>(),
+    createdAt: int({ mode: 'number' })
+        .notNull()
+        .default(sql`(unixepoch())`),
+    updatedAt: int({ mode: 'number' })
+        .notNull()
+        .default(sql`(unixepoch())`),
+});
+
+export const organizationRelations = sqliteTable('organization_relations', {
     id: int('id').primaryKey({
         autoIncrement: true,
     }),
@@ -71,7 +88,7 @@ export const organization_relations = sqliteTable('organization_relations', {
         .references(() => organizations.id),
     roleId: int('role_id')
         .notNull()
-        .references(() => roles.id),
+        .references(() => organizationRoles.id), //scope in the roles table should be organization in order to be valid
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -80,7 +97,7 @@ export const organization_relations = sqliteTable('organization_relations', {
         .default(sql`(unixepoch())`),
 });
 
-export const project_type = sqliteTable('project_type', {
+export const projectType = sqliteTable('project_type', {
     id: int('id').primaryKey({
         autoIncrement: true,
     }),
@@ -104,7 +121,7 @@ export const projects = sqliteTable('projects', {
     description: text('description'),
     projectType: int('project_type')
         .notNull()
-        .references(() => project_type.id), //this will reference a project type table
+        .references(() => projectType.id), //this will reference a project type table
     labelConfig: text('label_config'), //this will be a json string
     createdAt: int({ mode: 'number' })
         .notNull()
@@ -114,7 +131,7 @@ export const projects = sqliteTable('projects', {
         .default(sql`(unixepoch())`),
 });
 
-export const project_relations = sqliteTable('project_relations', {
+export const projectRelations = sqliteTable('project_relations', {
     id: int('id').primaryKey({
         autoIncrement: true,
     }),
@@ -126,7 +143,7 @@ export const project_relations = sqliteTable('project_relations', {
         .references(() => projects.id),
     roleId: int('role_id')
         .notNull()
-        .references(() => roles.id), //scope in the roles table should be project in order to be valid
+        .references(() => projectRoles.id), 
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),

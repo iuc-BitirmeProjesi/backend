@@ -2,13 +2,22 @@
 
 import { drizzle } from 'drizzle-orm/libsql/node';
 import bcrypt from 'bcryptjs';
-import { roles, users,project_type } from './src/db/schema';
+import {
+    users,
+    projectType,
+    organizationRoles,
+    projectRoles,
+} from './src/db/schema';
+import fs from 'node:fs';
 
 import { config } from 'dotenv';
 config();
 
-
 (async () => {
+    if (!fs.existsSync('database.db')) {
+        fs.writeFileSync('database.db', '');
+    }
+
     const db = drizzle('file:database.db');
 
     const result = await db.run('select 1');
@@ -33,16 +42,74 @@ config();
     console.log(`User ${email} created with password ${password}`);
 
     // insert role to the database. name: admin, description: admin, scope: organization, permission_flags: {"admin": true}, organization_id: 0
-    await db.insert(roles).values({
+    await db.insert(organizationRoles).values({
         name: 'admin',
         description: 'admin',
-        scope: 'organization',
-        permissionFlags: JSON.stringify({ admin: true }),
+        permissionFlags: {
+            admin: true,
+            editOrganization: true,
+            deleteOrganization: true,
+            editMembers: true,
+            editRoles: true,
+            editProjects: true,
+            createProjects: true,
+            deleteProjects: true,
+        },
+    });
+
+    await db.insert(organizationRoles).values({
+        name: 'user',
+        description: 'Default user role',
+        permissionFlags: {
+            admin: false,
+            editOrganization: false,
+            deleteOrganization: false,
+            editMembers: false,
+            editRoles: false,
+            editProjects: true,
+            createProjects: true,
+            deleteProjects: false,
+        },
     });
 
     //insert into project_types table for seeding
-    await db.insert(project_type).values([
+    await db.insert(projectType).values([
         { id: 1, name: 'classification' },
         { id: 2, name: 'object detection' },
     ]);
+
+    await db.insert(projectRoles).values({
+        name: 'admin',
+        description: 'Admin role for project',
+        permissionFlags: {
+            editProject: true,
+            deleteProject: true,
+            editMembers: true,
+            editRoles: true,
+            uploadFiles: true,
+        },
+    });
+
+    await db.insert(projectRoles).values({
+        name: 'user',
+        description: 'User role for project',
+        permissionFlags: {
+            editProject: false,
+            deleteProject: false,
+            editMembers: false,
+            editRoles: false,
+            uploadFiles: false,
+        },
+    });
+
+    console.log('Default roles created');
+
+    // Default user
+    await db.insert(users).values({
+        email: 'user@example.com',
+        password: await bcrypt.hash('user', 10),
+        isActiveUser: true,
+    });
+
+    console.log('User created');
 })();

@@ -6,7 +6,7 @@ import { users } from '../../db/schema';
 import { and, eq } from 'drizzle-orm';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'honoiscool';
-const JWT_EXPIRATION = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
+const JWT_EXPIRATION = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 37; // 37 days
 
 export const loginUser = async (
     db: LibSQLDatabase,

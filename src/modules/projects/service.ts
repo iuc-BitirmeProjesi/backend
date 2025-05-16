@@ -1,5 +1,5 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
-import { projects, project_relations, roles, organizations } from '../../db/schema';
+import { projects, projectRelations, organizations } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 //get all projects with userId
@@ -17,20 +17,20 @@ export const getProjects = async (
                 name: projects.name,
                 description: projects.description,
                 projectType: projects.projectType,
-                roleId: project_relations.roleId,
+                roleId: projectRelations.roleId,
                 createdAt: projects.createdAt,
                 updatedAt: projects.updatedAt,
             })
             .from(projects)
             .innerJoin(
-                project_relations,
-                eq(projects.id, project_relations.projectId)
+                projectRelations,
+                eq(projects.id, projectRelations.projectId)
             )
             .innerJoin(
                 organizations,
                 eq(projects.organizationId, organizations.id)
             )
-            .where(eq(project_relations.userId,userId))
+            .where(eq(projectRelations.userId,userId))
             .orderBy(desc(projects.createdAt))
             .all();
 
@@ -54,12 +54,12 @@ export const getProjectById = async (
             .where(
                 and(
                     eq(projects.id, id),
-                    eq(project_relations.userId, userId)
+                    eq(projectRelations.userId, userId)
                 )
             )
             .innerJoin(
-                project_relations,
-                eq(projects.id, project_relations.projectId)
+                projectRelations,
+                eq(projects.id, projectRelations.projectId)
             )
             .get();
         return { data: result, success: true };
@@ -93,7 +93,7 @@ export const createProject = async (
             // Insert into project_relations table
             const createdProject = result[0]; //make sure there is an id to apply into relations
 
-            await tx.insert(project_relations)
+            await tx.insert(projectRelations)
             .values({
                 userId: userId,
                 projectId:createdProject.id,
@@ -121,11 +121,11 @@ export const updateProject = async (
         const authorized = await db
             .select()
             .from(projects)
-            .innerJoin(project_relations, eq(projects.id, project_relations.projectId))
+            .innerJoin(projectRelations, eq(projects.id, projectRelations.projectId))
             .where(
                 and(
                     eq(projects.id, id),
-                    eq(project_relations.userId, userId)
+                    eq(projectRelations.userId, userId)
                 )
             )
             .get();
@@ -174,11 +174,11 @@ export const deleteProject = async (
         const authorized = await db
             .select()
             .from(projects)
-            .innerJoin(project_relations, eq(projects.id, project_relations.projectId))
+            .innerJoin(projectRelations, eq(projects.id, projectRelations.projectId))
             .where(
                 and(
                     eq(projects.id, id),
-                    eq(project_relations.userId, userId)
+                    eq(projectRelations.userId, userId)
                 )
             )
             .get();
@@ -190,7 +190,7 @@ export const deleteProject = async (
         // Start a transaction
         const result = await db.transaction(async (tx) => {
             // Delete from project_relations table
-            await tx.delete(project_relations).where(eq(project_relations.projectId, id));
+            await tx.delete(projectRelations).where(eq(projectRelations.projectId, id));
 
             // Delete from projects table
             const result = await tx.delete(projects).where(eq(projects.id, id)).returning().get();
