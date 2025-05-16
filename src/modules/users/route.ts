@@ -1,18 +1,14 @@
 import { Hono } from 'hono';
 import type { Variables } from '../../types';
-import { getUserInfo, updateUserInfo, toggleUserStatus } from './service';
+import { getUserInfo, updateUserInfo, toggleUserStatus, searchUserByEmail } from './service';
 
 const app = new Hono<{ Variables: Variables }>();
 
-app.get('/', (c) => {
-    return c.json({ message: 'Hello from users!' });
-});
-
 //get users info by id
-app.get('/:id', async (c) => {
+app.get('/', async (c) => {
     try {
         const db = c.var.db;
-        const id = c.req.param('id');
+        const id = c.req.header('id');
         if (!id) throw new Error('User ID is required');
         const result = await getUserInfo(db, Number(id));
         if (!result.success) throw new Error(result.error);
@@ -24,10 +20,10 @@ app.get('/:id', async (c) => {
 })
 
 //update user info by id
-app.put('/:id', async (c) => {
+app.put('/', async (c) => {
     try {
         const db = c.var.db;
-        const id = c.req.param('id');
+        const id = c.req.header('id');
 
         if (!id) throw new Error('User ID is required');
 
@@ -45,11 +41,11 @@ app.put('/:id', async (c) => {
 })
 
 //toggle user isActive status by id
-app.put('/:id/toggle', async (c) => {
+app.put('/toggle', async (c) => {
     try {
         const db = c.var.db;
 
-        const id = c.req.param('id');
+        const id = c.req.header('id');
         if (!id) throw new Error('User ID is required');
 
         const result = await toggleUserStatus(db, Number(id));
@@ -63,6 +59,20 @@ app.put('/:id/toggle', async (c) => {
     }
 })
 
+app.get('/search', async (c) => {
+    try {
+        const db = c.var.db;
+        const word = c.req.header('word');
+        if (!word) throw new Error('Search word is required');
 
+        const result = await searchUserByEmail(db, word);
+        if (!result.success) throw new Error(result.error);
+
+        return c.json({ data: result.data });
+    } catch (error) {
+        console.error('Error in search user route:', error);
+        return c.json({ error: 'Failed to search user', details: error.message }, 500);
+    }
+})
 
 export default app;
