@@ -1,45 +1,11 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
-import { organizations, organization_relations, roles } from '../../db/schema';
+import {
+    organizations,
+    organizationRelations,
+    organizationRoles,
+} from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import type { PermissionFlags } from '../roles/types';
-
-// Helper function to get user's organization permissions
-const getOrganizationPermissions = async (
-    db: LibSQLDatabase,
-    userId: number,
-    organizationId: number
-): Promise<PermissionFlags | null> => {
-    try {
-        const userRole = await db
-            .select({
-                permissionFlags: roles.permissionFlags,
-            })
-            .from(organization_relations)
-            .innerJoin(roles, eq(organization_relations.roleId, roles.id))
-            .where(
-                and(
-                    eq(organization_relations.userId, userId),
-                    eq(organization_relations.organizationId, organizationId)
-                )
-            )
-            .get();
-
-        return userRole ? userRole.permissionFlags as PermissionFlags : null;
-    } catch (error) {
-        console.error('Error getting organization permissions:', error);
-        return null;
-    }
-};
-
-// Helper function to check if user can modify organization
-const canModifyOrganization = (permissions: PermissionFlags): boolean => {
-    return permissions.organization.admin || permissions.organization.editOrganization;
-};
-
-// Helper function to check if user can delete organization
-const canDeleteOrganization = (permissions: PermissionFlags): boolean => {
-    return permissions.organization.admin || permissions.organization.deleteOrganization;
-};
+import { checkOrganizationPermission } from '../../utils';
 
 // Get all organizations
 export const getUsersOrganizations = async (
@@ -48,13 +14,21 @@ export const getUsersOrganizations = async (
 ) => {
     try {
         const result = await db
-            .select()
+            .select({
+                id: organizations.id,
+                name: organizations.name,
+                logo: organizations.logo,
+                description: organizations.description,
+                isActiveOrg: organizations.isActiveOrg,
+                createdAt: organizations.createdAt,
+                updatedAt: organizations.updatedAt,
+            })
             .from(organizations)
             .innerJoin(
-                organization_relations,
-                eq(organizations.id, organization_relations.organizationId)
+                organizationRelations,
+                eq(organizations.id, organizationRelations.organizationId)
             )
-            .where(eq(organization_relations.userId, userId))
+            .where(eq(organizationRelations.userId, userId))
             .orderBy(desc(organizations.createdAt))
             .all();
 
@@ -78,12 +52,12 @@ export const getOrganizationById = async (
             .where(
                 and(
                     eq(organizations.id, id),
-                    eq(organization_relations.userId, userId)
+                    eq(organizationRelations.userId, userId)
                 )
             )
             .innerJoin(
-                organization_relations,
-                eq(organizations.id, organization_relations.organizationId)
+                organizationRelations,
+                eq(organizations.id, organizationRelations.organizationId)
             )
             .get();
 
@@ -104,10 +78,6 @@ export const createOrganization = async (
     userId: number
 ) => {
     try {
-        // For creating an organization, we don't need to check permissions
-        // as any authenticated user can create an organization
-        // They will automatically get admin role for the new organization
-
         // Start a transaction
         const result = await db.transaction(async (tx) => {
             // Insert the organization
@@ -118,17 +88,14 @@ export const createOrganization = async (
                     ownerId: userId,
                     logo: organizationData.logo,
                     description: organizationData.description,
-                    isActiveOrg:
-                        organizationData.isActiveOrg !== undefined
-                            ? organizationData.isActiveOrg
-                            : true,
+                    isActiveOrg: organizationData.isActiveOrg ?? true,
                 })
                 .returning()
                 .get();
 
             // Get the admin role (assuming role id 1 is admin as per the comment in route.ts)
             const adminRoleId = 1;
-            await tx.insert(organization_relations).values({
+            await tx.insert(organizationRelations).values({
                 userId: userId,
                 organizationId: result.id,
                 roleId: adminRoleId,
@@ -148,20 +115,12 @@ export const createOrganization = async (
 // Update organization
 export const updateOrganization = async (
     db: LibSQLDatabase,
-    id: number,
+    orgId: number,
     userId: number,
     organizationData: Partial<typeof organizations.$inferInsert>
 ) => {
     try {
-        // Check permissions first
-        const permissions = await getOrganizationPermissions(db, userId, id);
-        if (!permissions) {
-            return { error: 'User has no permissions for this organization', success: false };
-        }
-
-        if (!canModifyOrganization(permissions)) {
-            return { error: 'User does not have permission to update organization', success: false };
-        }
+        await checkOrganizationPermission(db, userId, orgId, 'editOrganization');
 
         // Check if organization exists
         const orgExists = await db
@@ -169,13 +128,13 @@ export const updateOrganization = async (
             .from(organizations)
             .where(
                 and(
-                    eq(organizations.id, id),
-                    eq(organization_relations.userId, userId)
+                    eq(organizations.id, orgId),
+                    eq(organizationRelations.userId, userId)
                 )
             )
             .innerJoin(
-                organization_relations,
-                eq(organizations.id, organization_relations.organizationId)
+                organizationRelations,
+                eq(organizations.id, organizationRelations.organizationId)
             )
             .get();
 
@@ -190,13 +149,13 @@ export const updateOrganization = async (
                 isActiveOrg: organizationData.isActiveOrg,
                 updatedAt: Math.floor(Date.now() / 1000),
             })
-            .where(eq(organizations.id, id))
+            .where(eq(organizations.id, orgId))
             .returning()
             .get();
 
         return { data: result, success: true };
     } catch (error) {
-        console.error(`Error updating organization id ${id}:`, error);
+        console.error(`Error updating organization id ${orgId}:`, error);
         return { error: 'Failed to update organization', success: false };
     }
 };
@@ -204,19 +163,11 @@ export const updateOrganization = async (
 // Delete organization
 export const deleteOrganization = async (
     db: LibSQLDatabase,
-    id: number,
+    orgId: number,
     userId: number
 ) => {
     try {
-        // Check permissions first
-        const permissions = await getOrganizationPermissions(db, userId, id);
-        if (!permissions) {
-            return { error: 'User has no permissions for this organization', success: false };
-        }
-
-        if (!canDeleteOrganization(permissions)) {
-            return { error: 'User does not have permission to delete organization', success: false };
-        }
+        await checkOrganizationPermission(db, userId, orgId, 'deleteOrganization');
 
         // Check if organization exists
         const orgExists = await db
@@ -224,13 +175,13 @@ export const deleteOrganization = async (
             .from(organizations)
             .where(
                 and(
-                    eq(organizations.id, id),
-                    eq(organization_relations.userId, userId)
+                    eq(organizations.id, orgId),
+                    eq(organizationRelations.userId, userId)
                 )
             )
             .innerJoin(
-                organization_relations,
-                eq(organizations.id, organization_relations.organizationId)
+                organizationRelations,
+                eq(organizations.id, organizationRelations.organizationId)
             )
             .get();
 
@@ -240,12 +191,12 @@ export const deleteOrganization = async (
         const result = await db.transaction(async (tx) => {
             // Delete related organization_relations first
             await tx
-                .delete(organization_relations)
-                .where(eq(organization_relations.organizationId, id));
+                .delete(organizationRelations)
+                .where(eq(organizationRelations.organizationId, orgId));
             // Delete the organization
             const result = await tx
                 .delete(organizations)
-                .where(eq(organizations.id, id))
+                .where(eq(organizations.id, orgId))
                 .returning()
                 .get();
 
@@ -254,7 +205,7 @@ export const deleteOrganization = async (
         if (!result.success) throw new Error('Failed to delete organization');
         return { data: result.data, success: true };
     } catch (error) {
-        console.error(`Error deleting organization id ${id}:`, error);
+        console.error(`Error deleting organization id ${orgId}:`, error);
         return { error: 'Failed to delete organization', success: false };
     }
 };

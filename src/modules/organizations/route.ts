@@ -78,9 +78,9 @@ app.post('/', async (c) => {
 app.put('/:id', async (c) => {
     try {
         const db = c.var.db;
-        const id = c.req.param('id');
+        const orgId = c.req.param('id');
 
-        if (!id) throw new Error('Organization ID is required');
+        if (!orgId) throw new Error('Organization ID is required');
 
         // Parse the request body
         const body = await c.req.json<Partial<typeof organizations.$inferInsert>>();
@@ -89,7 +89,7 @@ app.put('/:id', async (c) => {
         if (Object.keys(body).length === 0) throw new Error('No fields provided for update');
         const userId = c.var.jwtPayload.userId;
 
-        const result = await updateOrganization(db, Number(id), userId, body);
+        const result = await updateOrganization(db, Number(orgId), userId, body);
         if (!result.success) throw new Error(result.error);
 
         return c.json(result.data);

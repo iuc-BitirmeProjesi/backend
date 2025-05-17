@@ -16,11 +16,3 @@ export type ProjectPermissionFlags = {
     editRoles: boolean;
     uploadFiles: boolean;    
 }
-
-export type PermissionFlagsContainer = {
-    organization: OrganizationPermissionFlags;
-    project: ProjectPermissionFlags;
-}
-
-export type PermissionFlags = PermissionFlagsContainer;
-

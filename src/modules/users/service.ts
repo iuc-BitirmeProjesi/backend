@@ -1,19 +1,16 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { users } from '../../db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, inArray, ilike, like } from 'drizzle-orm';
 
 //get user info by id
-export const getUserInfo = async (
-    db: LibSQLDatabase,
-    id: number
-) => {
+export const getUserInfo = async (db: LibSQLDatabase, id: number) => {
     try {
         const result = await db
             .select({
                 id: users.id,
                 email: users.email,
                 createdAt: users.createdAt,
-                updatedAt: users.updatedAt
+                updatedAt: users.updatedAt,
             })
             .from(users)
             .where(eq(users.id, id))
@@ -23,7 +20,7 @@ export const getUserInfo = async (
         console.error('Error getting user info:', error);
         return { error: 'Failed to retrieve user info', success: false };
     }
-}
+};
 
 //update user info by id
 export const updateUserInfo = async (
@@ -46,13 +43,10 @@ export const updateUserInfo = async (
         console.error('Error updating user info:', error);
         return { error: 'Failed to update user info', success: false };
     }
-}
+};
 
 //toggle user active status
-export const toggleUserStatus = async (
-    db: LibSQLDatabase,
-    id: number
-) => {
+export const toggleUserStatus = async (db: LibSQLDatabase, id: number) => {
     try {
         const user = await db
             .select({ isActiveUser: users.isActiveUser })
@@ -79,4 +73,23 @@ export const toggleUserStatus = async (
         console.error('Error toggling user status:', error);
         return { error: 'Failed to toggle user status', success: false };
     }
-}
+};
+
+export const searchUserByEmail = async (db: LibSQLDatabase, word: string) => {
+    try {
+        const result = await db
+            .select({
+                id: users.id,
+                email: users.email,
+                createdAt: users.createdAt,
+                updatedAt: users.updatedAt,
+            })
+            .from(users)
+            .where(like(users.email, `%${word}%`))
+            .all();
+        return { data: result, success: true };
+    } catch (error) {
+        console.error('Error searching user by email:', error);
+        return { error: 'Failed to search user by email', success: false };
+    }
+};

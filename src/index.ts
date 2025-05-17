@@ -44,4 +44,8 @@ app.route('/api', api);
 serve({
     fetch: app.fetch,
     port: 8787,
+}).on("listening", () => {
+    console.log("Server is running on http://localhost:8787");
+}).on("close", () => {
+    console.log("Server is closed");
 });
