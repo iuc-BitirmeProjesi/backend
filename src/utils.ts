@@ -9,8 +9,8 @@ import { and, eq } from 'drizzle-orm';
 
 export const checkOrganizationPermission = async (
     db: LibSQLDatabase,
-    organizationId: number,
     userId: number,
+    organizationId: number,
     flag: keyof typeof organizationRoles.$inferSelect.permissionFlags
 ) => {
  /*    const permissions = await db

@@ -96,8 +96,8 @@ export const createOrganizationRole = async (
 
         await checkOrganizationPermission(
             db,
-            roleData.organizationId,
             userId,
+            roleData.organizationId,
             'editRoles'
         );
 
@@ -122,7 +122,7 @@ export const updateOrganizationRole = async (
     orgId: number
 ) => {
     try {
-        await checkOrganizationPermission(db, orgId, userId, 'editRoles');
+        await checkOrganizationPermission(db, userId, orgId, 'editRoles');
 
         const result = await db
             .update(organizationRoles)
@@ -145,7 +145,7 @@ export const deleteOrganizationRole = async (
     userId: number
 ) => {
     try {
-        await checkOrganizationPermission(db, orgId, userId, 'editRoles');
+        await checkOrganizationPermission(db, userId, orgId, 'editRoles');
 
         const result = await db
             .delete(organizationRoles)
