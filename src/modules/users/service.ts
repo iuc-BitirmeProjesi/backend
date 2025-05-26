@@ -18,7 +18,7 @@ export const getUserInfo = async (db: LibSQLDatabase, id: number) => {
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting user info:', error);
-        return { error: 'Failed to retrieve user info', success: false };
+        return { error: error.message || 'Failed to retrieve user info', success: false };
     }
 };
 
@@ -41,7 +41,7 @@ export const updateUserInfo = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error updating user info:', error);
-        return { error: 'Failed to update user info', success: false };
+        return { error: error.message || 'Failed to update user info', success: false };
     }
 };
 
@@ -71,7 +71,7 @@ export const toggleUserStatus = async (db: LibSQLDatabase, id: number) => {
         return { data: result, success: true };
     } catch (error) {
         console.error('Error toggling user status:', error);
-        return { error: 'Failed to toggle user status', success: false };
+        return { error: error.message || 'Failed to toggle user status', success: false };
     }
 };
 
@@ -90,6 +90,6 @@ export const searchUserByEmail = async (db: LibSQLDatabase, word: string) => {
         return { data: result, success: true };
     } catch (error) {
         console.error('Error searching user by email:', error);
-        return { error: 'Failed to search user by email', success: false };
+        return { error: error.message || 'Failed to search user by email', success: false };
     }
 };

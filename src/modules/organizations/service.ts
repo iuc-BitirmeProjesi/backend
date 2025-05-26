@@ -35,7 +35,7 @@ export const getUsersOrganizations = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting organizations:', error);
-        return { error: 'Failed to retrieve organizations', success: false };
+        return { error: error.message || 'Failed to retrieve organizations', success: false };
     }
 };
 
@@ -67,7 +67,7 @@ export const getOrganizationById = async (
         return { data: result, success: true };
     } catch (error) {
         console.error(`Error getting organization id ${id}:`, error);
-        return { error: 'Failed to retrieve organization', success: false };
+        return { error: error.message || 'Failed to retrieve organization', success: false };
     }
 };
 
@@ -108,7 +108,7 @@ export const createOrganization = async (
         return { data: result.data, success: true };
     } catch (error) {
         console.error('Error creating organization:', error);
-        return { error: 'Failed to create organization', success: false };
+        return { error: error.message || 'Failed to create organization', success: false };
     }
 };
 
@@ -156,7 +156,7 @@ export const updateOrganization = async (
         return { data: result, success: true };
     } catch (error) {
         console.error(`Error updating organization id ${orgId}:`, error);
-        return { error: 'Failed to update organization', success: false };
+        return { error: error.message || 'Failed to update organization', success: false };
     }
 };
 
@@ -206,6 +206,6 @@ export const deleteOrganization = async (
         return { data: result.data, success: true };
     } catch (error) {
         console.error(`Error deleting organization id ${orgId}:`, error);
-        return { error: 'Failed to delete organization', success: false };
+        return { error: error.message || 'Failed to delete organization', success: false };
     }
 };

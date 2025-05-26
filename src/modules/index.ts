@@ -10,6 +10,8 @@ import projects from './projects/route';
 import annotations from './annotations/route';
 import organizationRoles from './organizationRoles/route';
 import organizationRelations from './organizationRelations/route';
+import projectRoles from './projectRoles/route';
+import projectRelations from './projectRelations/route';
 
 
 const app = new Hono<{ Variables: Variables }>();
@@ -41,5 +43,8 @@ app.route('/organizationRoles', organizationRoles);
 
 app.route('/organizationRelations', organizationRelations);
 
+app.route('/projectRoles', projectRoles);
+
+app.route('/projectRelations', projectRelations);
 
 export default app;

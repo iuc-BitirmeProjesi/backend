@@ -1,14 +1,14 @@
 import { Hono } from 'hono';
 import type { Variables } from '../../types';
-import type { OrganizationPermissionFlags } from './types';
+import type { ProjectPermissionFlags } from '../organizationRoles/types';
 import {
-    createOrganizationRole,
-    deleteOrganizationRole,
-    getOrganizationRoleById,
-    getOrganizationRoles,
-    updateOrganizationRole,
+    createProjectRole,
+    deleteProjectRole,
+    getProjectRoleById,
+    getProjectRoles,
+    updateProjectRole,
 } from './service';
-import type { organizationRoles } from '../../db/schema';
+import type { projectRoles } from '../../db/schema';
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -18,18 +18,18 @@ app.get('/all', async (c) => {
         const db = c.var.db;
         const userId = c.var.jwtPayload.userId;
 
-        const orgId = c.req.header('orgId');
-        if (!orgId) throw new Error('Organization ID is required');
+        const projectId = c.req.header('projectId');
+        if (!projectId) throw new Error('Project ID is required');
 
-        const result = await getOrganizationRoles(db, userId, Number(orgId));
+        const result = await getProjectRoles(db, userId, Number(projectId));
 
         if (!result.success) throw new Error(result.error);
 
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in get roles route:', error);
+        console.error('Error in get project roles route:', error);
         return c.json(
-            { error: error.message || 'Failed to retrieve roles', details: error.message },
+            { error: error.message || 'Failed to retrieve project roles', details: error.message },
             500
         );
     }
@@ -38,21 +38,21 @@ app.get('/all', async (c) => {
 //create role
 app.post('/create', async (c) => {
     try {
-        console.log('Creating role...');
+        console.log('Creating project role...');
         const db = c.var.db;
         const userId = c.var.jwtPayload.userId;
 
         // Parse the request body
-        const body = await c.req.json<typeof organizationRoles.$inferInsert>();
+        const body = await c.req.json<typeof projectRoles.$inferInsert>();
 
-        const result = await createOrganizationRole(db, userId, body);
+        const result = await createProjectRole(db, userId, body);
         if (!result.success) throw new Error(result.error);
 
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in create role route:', error);
+        console.error('Error in create project role route:', error);
         return c.json(
-            { error: error.message || 'Failed to create role', details: error.message },
+            { error: error.message || 'Failed to create project role', details: error.message },
             500
         );
     }
@@ -68,22 +68,22 @@ app.get('/:id', async (c) => {
 
         const userId = c.var.jwtPayload.userId;
 
-        // Get orgId from query parameter
-        const orgId = c.req.query('orgId');
-        if (!orgId) throw new Error('Organization ID is required');
+        // Get projectId from query parameter
+        const projectId = c.req.query('projectId');
+        if (!projectId) throw new Error('Project ID is required');
 
-        const result = await getOrganizationRoleById(
+        const result = await getProjectRoleById(
             db,
             Number(id),
             userId,
-            Number(orgId)
+            Number(projectId)
         );
         if (!result.success) throw new Error(result.error);
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in get role by id route:', error);
+        console.error('Error in get project role by id route:', error);
         return c.json(
-            { error: error.message || 'Failed to retrieve role', details: error.message },
+            { error: error.message || 'Failed to retrieve project role', details: error.message },
             500
         );
     }
@@ -101,7 +101,7 @@ app.put('/:id', async (c) => {
 
         // Parse the request body
         const body = await c.req.json<
-            Partial<typeof organizationRoles.$inferSelect>
+            Partial<typeof projectRoles.$inferSelect>
         >();
 
         // Validate the request body
@@ -111,14 +111,14 @@ app.put('/:id', async (c) => {
         if (!body.permissionFlags)
             throw new Error('Permission flags are required');
 
-        const roleData: typeof organizationRoles.$inferInsert = {
+        const roleData: typeof projectRoles.$inferInsert = {
             name: body.name,
             description: body.description,
             organizationId: body.organizationId,
             permissionFlags: body.permissionFlags,
         };
 
-        const result = await updateOrganizationRole(
+        const result = await updateProjectRole(
             db,
             roleData,
             Number(id),
@@ -128,9 +128,9 @@ app.put('/:id', async (c) => {
 
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in update role route:', error);
+        console.error('Error in update project role route:', error);
         return c.json(
-            { error: error.message || 'Failed to update role', details: error.message },
+            { error: error.message || 'Failed to update project role', details: error.message },
             500
         );
     }
@@ -146,26 +146,26 @@ app.delete('/:id', async (c) => {
 
         const userId = c.var.jwtPayload.userId;
 
-        // Get orgId from query parameter
-        const orgId = c.req.query('orgId');
-        if (!orgId) throw new Error('Organization ID is required');
+        // Get projectId from query parameter
+        const projectId = c.req.query('projectId');
+        if (!projectId) throw new Error('Project ID is required');
 
-        const result = await deleteOrganizationRole(
+        const result = await deleteProjectRole(
             db,
             Number(id),
             userId,
+            Number(projectId)
         );
         if (!result.success) throw new Error(result.error);
 
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in delete role route:', error);
+        console.error('Error in delete project role route:', error);
         return c.json(
-            { error: error.message || 'Failed to delete role', details: error.message },
+            { error: error.message || 'Failed to delete project role', details: error.message },
             500
         );
     }
 });
-
 
 export default app;

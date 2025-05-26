@@ -22,7 +22,7 @@ app.get('/all', async (c) => {
 
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in get organizations route:', error);
+        console.log('Error in get organizations route:', error);
         return c.json({ error: 'Failed to retrieve organizations', details: error.message }, 500);
     }
 });
@@ -41,7 +41,7 @@ app.get('/:id', async (c) => {
 
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in get organization by id route:', error);
+        console.log('Error in get organization by id route:', error);
         return c.json({ error: 'Failed to retrieve organization', details: error.message }, 500);
     }
 });
@@ -69,7 +69,7 @@ app.post('/', async (c) => {
 
         return c.json({data: result.data});
     } catch (error) {
-        console.error('Error in create organization route:', error);
+        console.log('Error in create organization route:', error);
         return c.json({ error: 'Failed to create organization' }, 500);
     }
 });
@@ -94,7 +94,7 @@ app.put('/:id', async (c) => {
 
         return c.json(result.data);
     } catch (error) {
-        console.error('Error in update organization route:', error);        }
+        console.log('Error in update organization route:', error);        }
         return c.json({ error: 'Failed to update organization' }, 500);
 });
 
@@ -111,7 +111,7 @@ app.delete('/:id', async (c) => {
 
         return c.json({ data: result.data });
     } catch (error) {
-        console.error('Error in delete organization route:', error);
+        console.log('Error in delete organization route:', error);
         return c.json({ error: 'Failed to delete organization' }, 500);
     }
 });
