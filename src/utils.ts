@@ -28,7 +28,7 @@ export const checkOrganizationPermission = async (
         )
         .get(); */
 
-        console.log('Checking organization permissions for user:', userId, 'in organization:', organizationId, 'for flag:', flag);
+        // console.log('Checking organization permissions for user:', userId, 'in organization:', organizationId, 'for flag:', flag);
     const permissions = await db
         .select({ permissionFlags: organizationRoles.permissionFlags })
         .from(organizationRelations)

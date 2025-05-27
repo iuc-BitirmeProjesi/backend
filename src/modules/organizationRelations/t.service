@@ -60,7 +60,8 @@ export const insertUserToOrganization = async (
     db: LibSQLDatabase,
     organizationId: number,
     userId: number,
-    usersToInsert: { userId: number; roleId: number }[]
+    roleId: number,
+    userIdToInsert: number
 ) => {
     try {
         await checkOrganizationPermission(
@@ -70,47 +71,35 @@ export const insertUserToOrganization = async (
             'editMembers'
         );
 
-        // Get all userIds to insert
-        const userIds = usersToInsert.map(u => u.userId);
-
-        // Find users already in the organization
-        const existingRelations = await db
-            .select({ userId: organizationRelations.userId })
+        // Check if user is already in the organization
+        const existingRelation = await db
+            .select()
             .from(organizationRelations)
             .where(
                 and(
-                    eq(organizationRelations.organizationId, organizationId),
-                    // Drizzle doesn't support 'in' directly, so use or(...)
-                    or(...userIds.map(id => eq(organizationRelations.userId, id)))
+                    eq(organizationRelations.userId, userIdToInsert),
+                    eq(organizationRelations.organizationId, organizationId)
                 )
-            );
-        const existingUserIds = new Set(existingRelations.map(r => r.userId));
+            )
+            .get();
 
-        // Filter out users already in the organization
-        const usersNotInOrg = usersToInsert.filter(u => !existingUserIds.has(u.userId));
-        const skipped = usersToInsert.filter(u => existingUserIds.has(u.userId));
-
-        // Insert users not already in the organization
-        if (usersNotInOrg.length > 0) {
-            await db.insert(organizationRelations).values(
-                usersNotInOrg.map(u => ({
-                    organizationId,
-                    userId: u.userId,
-                    roleId: u.roleId,
-                }))
-            );
+        if (existingRelation) {
+            throw new Error('User is already a member of this organization');
         }
 
-        return {
-            success: true,
-            inserted: usersNotInOrg.map(u => u.userId),
-            skipped: skipped.map(u => u.userId),
-        };
+        // Insert the user into the organization
+        await db.insert(organizationRelations).values({
+            organizationId,
+            userId: userIdToInsert,
+            roleId,
+        });
+
+        return { success: true };
     } catch (error) {
-        console.error('Error inserting users to organization:', error);
+        console.error('Error inserting user to organization:', error);
         return {
             success: false,
-            error: error.message || 'Failed to insert users to organization',
+            error: error.message || 'Failed to insert user to organization',
         };
     }
 };
