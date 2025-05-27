@@ -55,7 +55,7 @@ export const getOrganizationRoles = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting roles:', error);
-        return { error: 'Failed to retrieve roles', success: false };
+        return { error: error.message || 'Failed to retrieve roles', success: false };
     }
 };
 
@@ -80,7 +80,7 @@ export const getOrganizationRoleById = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting role by id:', error);
-        return { error: 'Failed to retrieve role', success: false };
+        return { error: error.message || 'Failed to retrieve role', success: false };
     }
 };
 
@@ -96,8 +96,8 @@ export const createOrganizationRole = async (
 
         await checkOrganizationPermission(
             db,
-            roleData.organizationId,
             userId,
+            roleData.organizationId,
             'editRoles'
         );
 
@@ -110,7 +110,7 @@ export const createOrganizationRole = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error creating role:', error);
-        return { error: 'Failed to create role', success: false };
+        return { error: error.message || 'Failed to create role', success: false };
     }
 };
 
@@ -122,7 +122,7 @@ export const updateOrganizationRole = async (
     orgId: number
 ) => {
     try {
-        await checkOrganizationPermission(db, orgId, userId, 'editRoles');
+        await checkOrganizationPermission(db, userId, orgId, 'editRoles');
 
         const result = await db
             .update(organizationRoles)
@@ -134,7 +134,7 @@ export const updateOrganizationRole = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error updating role:', error);
-        return { error: 'Failed to update role', success: false };
+        return { error: error.message || 'Failed to update role', success: false };
     }
 };
 
@@ -145,7 +145,7 @@ export const deleteOrganizationRole = async (
     userId: number
 ) => {
     try {
-        await checkOrganizationPermission(db, orgId, userId, 'editRoles');
+        await checkOrganizationPermission(db, userId, orgId, 'editRoles');
 
         const result = await db
             .delete(organizationRoles)
@@ -156,6 +156,6 @@ export const deleteOrganizationRole = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error deleting role:', error);
-        return { error: 'Failed to delete role', success: false };
+        return { error: error.message || 'Failed to delete role', success: false };
     }
 };

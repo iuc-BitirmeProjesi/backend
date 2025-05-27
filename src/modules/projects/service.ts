@@ -37,7 +37,7 @@ export const getProjects = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting projects:', error);
-        return { error: 'Failed to retrieve projects', success: false };
+        return { error: error.message || 'Failed to retrieve projects', success: false };
     }
 }
 
@@ -65,7 +65,7 @@ export const getProjectById = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting project by id:', error);
-        return { error: 'Failed to retrieve project', success: false };
+        return { error: error.message || 'Failed to retrieve project', success: false };
     }
 }
 
@@ -104,7 +104,7 @@ export const createProject = async (
         return { data: projectData, success: true };
     } catch (error) {
         console.error('Error creating project:', error);
-        return { error: 'Failed to create project', success: false };
+        return { error: error.message || 'Failed to create project', success: false };
     }
 }
 
@@ -149,7 +149,7 @@ export const updateProject = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error updating project:', error);
-        return { error: 'Failed to update project', success: false };
+        return { error: error.message || 'Failed to update project', success: false };
     }
 }
 
@@ -167,9 +167,8 @@ export const deleteProject = async (
             .where(eq(projects.id, id))
             .get();
 
-        if (!project) {
-            return { error: 'Project not found', success: false };
-        }
+        if (!project) throw new Error('Project not found');
+        
         // auth control
         const authorized = await db
             .select()
@@ -183,9 +182,7 @@ export const deleteProject = async (
             )
             .get();
 
-        if (!authorized) {
-            return { error: 'Unauthorized', success: false };
-        }
+        if (!authorized) throw new Error('Unauthorized');
 
         // Start a transaction
         const result = await db.transaction(async (tx) => {
@@ -202,7 +199,7 @@ export const deleteProject = async (
        
     } catch (error) {
         console.error('Error deleting project:', error);
-        return { error: 'Failed to delete project', success: false };
+        return { error: error.message || 'Failed to delete project', success: false };
     }
 }
 

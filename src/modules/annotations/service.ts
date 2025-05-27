@@ -17,7 +17,7 @@ export const getAnnotations = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting annotations:', error);
-        return { error: 'Failed to retrieve annotations', success: false };
+        return { error: error.message || 'Failed to retrieve annotations', success: false };
     }
 }
 
@@ -36,7 +36,7 @@ export const getAnnotationById = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting annotation by id:', error);
-        return { error: 'Failed to retrieve annotation', success: false };
+        return { error: error.message || 'Failed to retrieve annotation', success: false };
     }
 }
 
@@ -62,7 +62,7 @@ export const createAnnotation = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error creating annotation:', error);
-        return { error: 'Failed to create annotation', success: false };
+        return { error: error.message || 'Failed to create annotation', success: false };
     }
 }
 
