@@ -11,12 +11,15 @@ import type { projects } from "../../db/schema";
 
 const app = new Hono<{ Variables: Variables }>();
 
-//get all projects with userId
+//get all projects with userId for specific organization
 app.get('/all', async (c) => {
     try {
         const db = c.var.db;
         const userId = c.var.jwtPayload.userId;
-        const result = await getProjects(db, userId);
+        const organizationId = c.req.header('orgId');
+        if (!organizationId) throw new Error('Organization ID is required');
+        
+        const result = await getProjects(db, userId, Number(organizationId));
 
         if (!result.success) throw new Error(result.error);
 

@@ -2,10 +2,11 @@ import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { projects, projectRelations, organizations } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
-//get all projects with userId
+//get all projects with userId for specific organization
 export const getProjects = async (
     db: LibSQLDatabase,
-    userId: number
+    userId: number,
+    organizationId: number
 ) => {
     try {
         const result = await db
@@ -30,7 +31,12 @@ export const getProjects = async (
                 organizations,
                 eq(projects.organizationId, organizations.id)
             )
-            .where(eq(projectRelations.userId,userId))
+            .where(
+                and(
+                    eq(projectRelations.userId, userId),
+                    eq(projects.organizationId, organizationId)
+                )
+            )
             .orderBy(desc(projects.createdAt))
             .all();
 
