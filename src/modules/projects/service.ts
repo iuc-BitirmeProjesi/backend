@@ -1,6 +1,7 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { projects, projectRelations, organizations } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import fs from 'fs';
 
 //get all projects with userId for specific organization
 export const getProjects = async (
@@ -94,17 +95,18 @@ export const createProject = async (
                     projectType: projectData.projectType,
                 })
                 .returning()
-                .all();
+                .get();
 
             // Insert into project_relations table
-            const createdProject = result[0]; //make sure there is an id to apply into relations
-
             await tx.insert(projectRelations)
             .values({
                 userId: userId,
-                projectId:createdProject.id,
+                projectId: result.id,
                 roleId: 1, // Assuming 1 is the admin role ID
             });
+
+            // create folder in file system. in bucket/projects/{projectId}
+            fs.mkdirSync(`./bucket/projects/${result.id}`, { recursive: true });
         });
 
         return { data: projectData, success: true };
