@@ -32,13 +32,15 @@ app.post('/addUser', async (c) => {
         if (!orgId) throw new Error('Organization ID is required');
 
         // Parse the request body
-        const body = await c.req.json();
+        const body = await c.req.json() as {
+            roleId: number;
+            userId: number;
+        }[]
         const result = await insertUserToOrganization(
             db,
             Number(orgId),
             userId,
-            body.roleId,
-            body.userId
+            body
         )
         if (!result.success) throw new Error(result.error);
 
