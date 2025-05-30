@@ -59,7 +59,7 @@ export const getOrganizationById = async (
                 organizationRelations,
                 eq(organizations.id, organizationRelations.organizationId)
             )
-            .get();
+            .all();
 
         if (!result) throw new Error('Organization not found');
 
