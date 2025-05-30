@@ -12,11 +12,13 @@ import organizationRoles from './organizationRoles/route';
 import organizationRelations from './organizationRelations/route';
 import projectRoles from './projectRoles/route';
 import projectRelations from './projectRelations/route';
-
+import bucket from './upload/route';
 
 const app = new Hono<{ Variables: Variables }>();
 
 app.route('/auth', auth);
+
+app.route('/bucket', bucket);
 
 app.use(
     '*',

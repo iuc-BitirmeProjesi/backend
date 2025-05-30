@@ -431,6 +431,133 @@
 						}
 					}
 				}
+			]		},
+		{
+			"name": "Upload",
+			"item": [				{
+					"name": "Get User Profile Picture",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/bucket/profilePicture?type=user",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bucket",
+								"profilePicture"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "user"
+								}
+							]
+						}
+					}
+				},				{
+					"name": "Get Organization Profile Picture",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "orgId",
+								"value": "{{organizationId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bucket/profilePicture?type=organization",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bucket",
+								"profilePicture"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "organization"
+								}
+							]
+						}
+					}
+				},{
+					"name": "Upload User Profile Picture",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/octet-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": ""
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bucket/profilePicture?type=user",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bucket",
+								"profilePicture"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "user"
+								}
+							]
+						}
+					}
+				},				{
+					"name": "Upload Organization Profile Picture",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/octet-stream",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{organizationId}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": ""
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bucket/profilePicture?type=organization",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bucket",
+								"profilePicture"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "organization"
+								}
+							]
+						}
+					}
+				}
 			]
 		}
 	]
