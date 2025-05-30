@@ -4,6 +4,7 @@ import {
     projectRelations,
     projectRoles,
     users,
+    organizations,
 } from '../../db/schema';
 import { eq, and, desc, or, isNull } from 'drizzle-orm';
 import { checkProjectPermission } from '../../utils';
@@ -96,9 +97,9 @@ export const createProjectRole = async (
 
         // Get project information to check permissions
         const projectInfo = await db
-            .select({ organizationId: projects.organizationId })
-            .from(projects)
-            .where(eq(projects.id, roleData.organizationId))
+            .select({ organizationId: organizations.id })
+            .from(organizations)
+            .where(eq(organizations.id, roleData.organizationId))
             .get();
 
         if (!projectInfo)
