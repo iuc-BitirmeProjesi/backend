@@ -83,6 +83,7 @@ export const createProject = async (
     userId: number
 ) => {
     try {
+        let res: typeof projects.$inferInsert | null = null;
         // Start a transaction
         await db.transaction(async (tx) => {
             // Insert into projects table
@@ -107,9 +108,9 @@ export const createProject = async (
 
             // create folder in file system. in bucket/projects/{projectId}
             fs.mkdirSync(`./bucket/projects/${result.id}`, { recursive: true });
+            res = result;
         });
-
-        return { data: projectData, success: true };
+        return { data: res, success: true };
     } catch (error) {
         console.error('Error creating project:', error);
         return { error: error.message || 'Failed to create project', success: false };
