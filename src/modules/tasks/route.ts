@@ -95,19 +95,31 @@ app.post('/create', async (c) => {
 });
 
 // Update task
-app.put('/update/:taskId', async (c) => {
+app.put('/update', async (c) => {
     try {
         const db = c.var.db;
-        const taskId = Number(c.req.param('taskId'));
-        const updates = await c.req.json();
+        const { taskId, ...updates } = await c.req.json();
         
-        if (!taskId) throw new Error('Task ID is required');
+        if (!taskId) throw new Error('Task ID is required in request body');
+        
+        // Validate taskId (can be number or array of numbers)
+        const isValidTaskId = typeof taskId === 'number' || 
+            (Array.isArray(taskId) && taskId.every(id => typeof id === 'number'));
+        
+        if (!isValidTaskId) {
+            throw new Error('Task ID must be a number or array of numbers');
+        }
         
         const result = await updateTask(db, taskId, updates);
 
         if (!result.success) throw new Error(result.error);
 
-        return c.json({ data: result.data });
+        return c.json({ 
+            data: result.data,
+            message: Array.isArray(taskId) 
+                ? `Updated ${Array.isArray(result.data) ? result.data.length : 0} tasks` 
+                : 'Task updated successfully'
+        });
     } catch (error) {
         console.error('Error in update task route:', error);
         return c.json({ error: 'Failed to update task', details: error.message }, 500);

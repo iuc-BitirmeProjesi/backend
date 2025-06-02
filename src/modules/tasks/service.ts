@@ -23,10 +23,6 @@ export const getTasksByProject = async (db: LibSQLDatabase, projectId: number, u
             .where(eq(tasks.projectId, projectId))
             .orderBy(desc(tasks.priority), desc(tasks.createdAt));
 
-        allTasks.forEach(task => {
-            task.dataUrl = `http://localhost:8787/api/bucket/taskData/${projectId}/${task.dataUrl}`;
-        });
-        
         // Group tasks by status
         const groupedTasks = {
             unassigned: allTasks.filter(task => task.status === 'unassigned'),
@@ -159,9 +155,9 @@ export const createTask = async (
 // Update task
 export const updateTask = async (
     db: LibSQLDatabase,
-    taskId: number,
+    taskIds: number | number[],
     updates: Partial<{
-        status: 'pending' | 'assigned' | 'completed';
+        status: typeof tasks.$inferSelect['status'];
         assignedTo: number | null;
         metadata: any;
         priority: number;
@@ -175,17 +171,37 @@ export const updateTask = async (
         if (updates.metadata !== undefined) updateData.metadata = JSON.stringify(updates.metadata);
         if (updates.priority !== undefined) updateData.priority = updates.priority;
         
-        const result = await db
-            .update(tasks)
-            .set(updateData)
-            .where(eq(tasks.id, taskId))
-            .returning()
-            .get();
+        // Handle single taskId
+        if (typeof taskIds === 'number') {
+            const result = await db
+                .update(tasks)
+                .set(updateData)
+                .where(eq(tasks.id, taskIds))
+                .returning()
+                .get();
+            
+            return { data: result, success: true };
+        }
         
-        return { data: result, success: true };
+        // Handle array of taskIds
+        const results = [];
+        for (const taskId of taskIds) {
+            const result = await db
+                .update(tasks)
+                .set(updateData)
+                .where(eq(tasks.id, taskId))
+                .returning()
+                .get();
+            
+            if (result) {
+                results.push(result);
+            }
+        }
+        
+        return { data: results, success: true };
     } catch (error: any) {
-        console.error('Error updating task:', error);
-        return { error: error.message || 'Failed to update task', success: false };
+        console.error('Error updating task(s):', error);
+        return { error: error.message || 'Failed to update task(s)', success: false };
     }
 };
 

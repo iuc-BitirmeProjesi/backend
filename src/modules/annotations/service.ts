@@ -66,6 +66,40 @@ export const createAnnotation = async (
     }
 }
 
+//get annotations by task id
+export const getAnnotationsByTaskId = async (
+    db: LibSQLDatabase,
+    taskId: number
+) => {
+    try {
+        const result = await db
+            .select({
+                id: annotations.id,
+                taskId: annotations.taskId,
+                userId: annotations.userId,
+                projectId: annotations.projectId,
+                annotationData: annotations.annotationData,
+                isGroundTruth: annotations.isGroundTruth,
+                reviewStatus: annotations.reviewStatus,
+                reviewerId: annotations.reviewerId,
+                createdAt: annotations.createdAt,
+                updatedAt: annotations.updatedAt,
+                // Join with users table to get user email for annotator
+                userEmail: users.email
+            })
+            .from(annotations)
+            .leftJoin(users, eq(annotations.userId, users.id))
+            .where(eq(annotations.taskId, taskId))
+            .orderBy(desc(annotations.createdAt))
+            .all();
+        
+        return { data: result, success: true };
+    } catch (error) {
+        console.error('Error getting annotations by task id:', error);
+        return { error: error.message || 'Failed to retrieve annotations for task', success: false };
+    }
+};
+
 //Update annotation
 
 //delete annotation

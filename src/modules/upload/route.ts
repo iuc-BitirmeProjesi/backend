@@ -33,6 +33,52 @@ app.get('/public/:uuid', (c) => {
     }
 });
 
+
+
+// Get project files (now supports both UUID and original filename lookup)
+app.get('/taskData/:projectId/:fileName', (c) => {
+    try {
+        const projectId = c.req.param('projectId');
+        const fileName = c.req.param('fileName');
+
+        if (!projectId || !fileName) throw new Error('Project ID and file name are required');
+        
+        const filePath = `./bucket/projects/${projectId}/${fileName}`;
+        
+        if (!fs.existsSync(filePath)) {
+            throw new Error('File not found');
+        }
+
+        const fileBuffer = fs.readFileSync(filePath);
+        const fileExt = path.extname(fileName).toLowerCase();
+        
+        let contentType = 'application/octet-stream';
+        if (['.jpg', '.jpeg'].includes(fileExt)) {
+            contentType = 'image/jpeg';
+        } else if (fileExt === '.png') {
+            contentType = 'image/png';
+        } else if (fileExt === '.gif') {
+            contentType = 'image/gif';
+        } else if (fileExt === '.webp') {
+            contentType = 'image/webp';
+        } else if (fileExt === '.bmp') {
+            contentType = 'image/bmp';
+        }
+
+        return c.body(fileBuffer, 200, {
+            'Content-Type': contentType,
+        });
+    } catch (error) {
+        console.error('Error in get project file route:', error);
+        return c.json(
+            { error: 'Failed to retrieve project file', details: error.message },
+            500
+        );
+    }
+});
+
+
+
 app.use(
     '*',
     jwt({
@@ -210,7 +256,7 @@ app.post('/uploadData', async (c) => {
                     const result = await saveFile(fileBuffer, imagePath);
                     
                     if (result) {
-                        const imageUrl = `http://localhost:8787/api/bucket/projects/${projectId}/${imageName}`;
+                        const imageUrl = `http://localhost:8787/api/bucket/taskData/${projectId}/${imageName}`;
                         
                         // Create task for the direct image upload
                         const taskResult = await createTask(
@@ -268,46 +314,5 @@ app.post('/uploadData', async (c) => {
     }
 });
 
-// Get project files (now supports both UUID and original filename lookup)
-app.get('/taskData/:projectId/:fileName', (c) => {
-    try {
-        const projectId = c.req.param('projectId');
-        const fileName = c.req.param('fileName');
-
-        if (!projectId || !fileName) throw new Error('Project ID and file name are required');
-        
-        const filePath = `./bucket/projects/${projectId}/${fileName}`;
-        
-        if (!fs.existsSync(filePath)) {
-            throw new Error('File not found');
-        }
-
-        const fileBuffer = fs.readFileSync(filePath);
-        const fileExt = path.extname(fileName).toLowerCase();
-        
-        let contentType = 'application/octet-stream';
-        if (['.jpg', '.jpeg'].includes(fileExt)) {
-            contentType = 'image/jpeg';
-        } else if (fileExt === '.png') {
-            contentType = 'image/png';
-        } else if (fileExt === '.gif') {
-            contentType = 'image/gif';
-        } else if (fileExt === '.webp') {
-            contentType = 'image/webp';
-        } else if (fileExt === '.bmp') {
-            contentType = 'image/bmp';
-        }
-
-        return c.body(fileBuffer, 200, {
-            'Content-Type': contentType,
-        });
-    } catch (error) {
-        console.error('Error in get project file route:', error);
-        return c.json(
-            { error: 'Failed to retrieve project file', details: error.message },
-            500
-        );
-    }
-});
 
 export default app;

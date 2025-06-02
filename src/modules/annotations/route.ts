@@ -4,6 +4,7 @@ import {
 	getAnnotations,
 	getAnnotationById,
 	createAnnotation,
+	getAnnotationsByTaskId,
 	// updateAnnotation, these are not implemented yet
 	// deleteAnnotation, these are not implemented yet
 } from "./service";
@@ -47,6 +48,28 @@ app.get("/:id", async (c) => {
 		console.error("Error in get annotation by id route:", error);
 		return c.json(
 			{ error: "Failed to retrieve annotation", details: error.message },
+			500,
+		);
+	}
+});
+
+//get all annotations for a specific task
+app.get("/task/:taskId", async (c) => {
+	try {
+		const db = c.var.db;
+		const taskId = c.req.param("taskId");
+
+		if (!taskId) throw new Error("Task ID is required");
+
+		const result = await getAnnotationsByTaskId(db, Number(taskId));
+
+		if (!result.success) throw new Error(result.error);
+
+		return c.json({ data: result.data });
+	} catch (error) {
+		console.error("Error in get annotations by task route:", error);
+		return c.json(
+			{ error: "Failed to retrieve task annotations", details: error.message },
 			500,
 		);
 	}
