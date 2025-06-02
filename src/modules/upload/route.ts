@@ -269,11 +269,11 @@ app.post('/uploadData', async (c) => {
 });
 
 // Get project files (now supports both UUID and original filename lookup)
-app.get('/taskData', (c) => {
+app.get('/taskData/:projectId/:fileName', (c) => {
     try {
-        const projectId = c.req.header('projectId');
-        const fileName = c.req.header('fileName');
-        
+        const projectId = c.req.param('projectId');
+        const fileName = c.req.param('fileName');
+
         if (!projectId || !fileName) throw new Error('Project ID and file name are required');
         
         const filePath = `./bucket/projects/${projectId}/${fileName}`;

@@ -170,9 +170,11 @@ export const tasks = sqliteTable('tasks', {
         .references(() => projects.id),
     dataUrl: text('data_url').notNull(),
     dataType: text('data_type').notNull(), //this will be a json string
-    status: text('status', ['pending', 'assigned', 'completed'])
+    status: text('status', {
+        enum: ['unassigned', 'annotating', 'completed']
+    })
         .notNull()
-        .default('pending'),
+        .default('unassigned'),
     assignedTo: int('assigned_to').references(() => users.id), //NULL if the task is in the pool
     metadata: text('metadata'), //this will be a json string
     priority: int('priority').notNull().default(0),

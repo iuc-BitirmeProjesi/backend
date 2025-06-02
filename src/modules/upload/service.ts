@@ -34,7 +34,7 @@ export const createTask = async (
                 dataUrl,
                 dataType: JSON.stringify(dataType),
                 metadata: metadata ? JSON.stringify(metadata) : null,
-                status: 'pending',
+                status: 'unassigned',
                 priority: 0,
             })
             .returning()
