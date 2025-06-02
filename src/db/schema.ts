@@ -1,6 +1,9 @@
 import { sql } from 'drizzle-orm';
 import { sqliteTable, text, int } from 'drizzle-orm/sqlite-core';
-import type { OrganizationPermissionFlags, ProjectPermissionFlags } from '../modules/organizationRoles/types';
+import type {
+    OrganizationPermissionFlags,
+    ProjectPermissionFlags,
+} from '../modules/organizationRoles/types';
 
 export const users = sqliteTable('users', {
     id: int('id').primaryKey({
@@ -8,7 +11,9 @@ export const users = sqliteTable('users', {
     }),
     email: text('email').notNull().unique(),
     password: text('password').notNull(),
-    isActiveUser: int('is_active_user', { mode: 'boolean' }).notNull().default(true),
+    isActiveUser: int('is_active_user', { mode: 'boolean' })
+        .notNull()
+        .default(true),
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -27,7 +32,9 @@ export const organizations = sqliteTable('organizations', {
     name: text('name').notNull(),
     logo: text('logo'),
     description: text('description'),
-    isActiveOrg: int('is_active_org', { mode: 'boolean' }).notNull().default(true),
+    isActiveOrg: int('is_active_org', { mode: 'boolean' })
+        .notNull()
+        .default(true),
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -43,11 +50,11 @@ export const organizationRoles = sqliteTable('organization_roles', {
     name: text('name').notNull(),
     description: text('description'),
     organizationId: int('organization_id').references(() => organizations.id),
-    permissionFlags: text('permission_flags',
-        {
-            mode: "json"
-        }
-    ).notNull().$type<OrganizationPermissionFlags>(),
+    permissionFlags: text('permission_flags', {
+        mode: 'json',
+    })
+        .notNull()
+        .$type<OrganizationPermissionFlags>(),
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -63,11 +70,11 @@ export const projectRoles = sqliteTable('project_roles', {
     name: text('name').notNull(),
     description: text('description'),
     organizationId: int('organization_id').references(() => organizations.id),
-    permissionFlags: text('permission_flags',
-        {
-            mode: "json"
-        }
-    ).notNull().$type<ProjectPermissionFlags>(),
+    permissionFlags: text('permission_flags', {
+        mode: 'json',
+    })
+        .notNull()
+        .$type<ProjectPermissionFlags>(),
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -145,7 +152,7 @@ export const projectRelations = sqliteTable('project_relations', {
         .references(() => projects.id),
     roleId: int('role_id')
         .notNull()
-        .references(() => projectRoles.id), 
+        .references(() => projectRoles.id),
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -163,7 +170,9 @@ export const tasks = sqliteTable('tasks', {
         .references(() => projects.id),
     dataUrl: text('data_url').notNull(),
     dataType: text('data_type').notNull(), //this will be a json string
-    status: text('status', ['pending', 'assigned', 'completed']).notNull().default('pending'),
+    status: text('status', ['pending', 'assigned', 'completed'])
+        .notNull()
+        .default('pending'),
     assignedTo: int('assigned_to').references(() => users.id), //NULL if the task is in the pool
     metadata: text('metadata'), //this will be a json string
     priority: int('priority').notNull().default(0),
@@ -188,13 +197,17 @@ export const annotations = sqliteTable('annotations', {
     projectId: int('project_id')
         .notNull()
         .references(() => projects.id),
-    annotationData: text('annotation_data').notNull(), //this will be a json string
+    annotationData: text('annotation_data', {
+        mode: 'json',
+    }).notNull(),
     isGroundTruth: int('is_ground_truth', {
         mode: 'boolean',
     })
         .notNull()
         .default(false),
-    reviewStatus: text('review_status', ['pending', 'approved', 'rejected']).notNull().default('pending'),
+    reviewStatus: text('review_status', ['pending', 'approved', 'rejected'])
+        .notNull()
+        .default('pending'),
     reviewerId: int('reviewer_id').references(() => users.id),
     createdAt: int({ mode: 'number' })
         .notNull()
