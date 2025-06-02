@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Variables } from '../../types';
-import { saveFile } from './service';
+import { saveFile, createTask } from './service';
 import fs from 'fs';
 import { jwt } from 'hono/jwt';
 import path from 'path';
@@ -73,6 +73,7 @@ app.post('/uploadPicture', async (c) => {
 // Upload project data (zip file or multiple images) to the server
 app.post('/uploadData', async (c) => {
     try {
+        const db = c.var.db;
         const projectId = c.req.header('projectId');
         if (!projectId) throw new Error('Project ID is required');
 
@@ -95,16 +96,20 @@ app.post('/uploadData', async (c) => {
         }
 
         const uploadedFiles = [];
+        const createdTasks = [];
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
 
         for (const file of files) {
             if (file instanceof File) {
                 const fileBuffer = await file.arrayBuffer();
-                const fileName = file.name || 'unknown';                const fileExt = path.extname(fileName).toLowerCase();
+                const originalFileName = file.name || 'unknown';
+                const fileExt = path.extname(originalFileName).toLowerCase();
                 
                 if (fileExt === '.zip') {
-                    // Save zip file to raw directory
-                    const zipPath = `${rawDir}/${fileName}`;
+                    // Save zip file to raw directory with UUID
+                    const uuid = crypto.randomUUID();
+                    const zipFileName = `${uuid}.zip`;
+                    const zipPath = `${rawDir}/${zipFileName}`;
                     const result = await saveFile(fileBuffer, zipPath);
                     
                     if (result) {
@@ -128,17 +133,41 @@ app.post('/uploadData', async (c) => {
                                         
                                         // Only process image files
                                         if (type === 'File' && imageExtensions.includes(entryFileExt)) {
-                                            const imagePath = path.join(projectDir, path.basename(entryFileName));
+                                            const imageUuid = crypto.randomUUID();
+                                            const imageName = `${imageUuid}${entryFileExt}`;
+                                            const imagePath = path.join(projectDir, imageName);
                                             const writeStream = fs.createWriteStream(imagePath);
                                             
                                             entry.pipe(writeStream);
                                             
-                                            writeStream.on('close', () => {
+                                            writeStream.on('close', async () => {
+                                                const imageUrl = `${imageName}`;
+                                                
+                                                // Create task for the extracted image
+                                                const taskResult = await createTask(
+                                                    db,
+                                                    parseInt(projectId),
+                                                    imageUrl,
+                                                    'image',
+                                                    {
+                                                        originalFileName: path.basename(entryFileName),
+                                                        extractedFrom: originalFileName,
+                                                        mimeType: `image/${entryFileExt.substring(1)}`,
+                                                        uuid: imageUuid
+                                                    }
+                                                );
+                                                  if (taskResult.success && taskResult.data) {
+                                                    createdTasks.push(taskResult.data);
+                                                }
+                                                
                                                 extractedFiles.push({
                                                     type: 'extracted_image',
-                                                    fileName: path.basename(entryFileName),
+                                                    uuid: imageUuid,
+                                                    fileName: imageName,
+                                                    originalFileName: path.basename(entryFileName),
                                                     path: imagePath,
-                                                    url: `http://localhost:8787/api/bucket/projects/${projectId}/${path.basename(entryFileName)}`
+                                                    url: imageUrl,
+                                                    taskId: (taskResult.success && taskResult.data) ? taskResult.data.id : null
                                                 });
                                             });
                                         } else {
@@ -152,9 +181,11 @@ app.post('/uploadData', async (c) => {
                             
                             uploadedFiles.push({
                                 type: 'zip',
-                                fileName: fileName,
+                                uuid: uuid,
+                                fileName: zipFileName,
+                                originalFileName: originalFileName,
                                 path: zipPath,
-                                message: `Zip file extracted successfully. ${extractedFiles.length} image(s) found.`,
+                                message: `Zip file extracted successfully. ${extractedFiles.length} image(s) found and ${createdTasks.filter(t => t).length} tasks created.`,
                                 extractedFiles: extractedFiles
                             });
                             
@@ -162,7 +193,9 @@ app.post('/uploadData', async (c) => {
                             console.error('Error extracting zip:', extractError);
                             uploadedFiles.push({
                                 type: 'zip',
-                                fileName: fileName,
+                                uuid: uuid,
+                                fileName: zipFileName,
+                                originalFileName: originalFileName,
                                 path: zipPath,
                                 message: 'Zip file saved but extraction failed. Please check the zip file format.',
                                 error: extractError.message
@@ -170,23 +203,46 @@ app.post('/uploadData', async (c) => {
                         }
                     }
                 } else if (imageExtensions.includes(fileExt)) {
-                    // Save image files directly to project directory
-                    const imagePath = `${projectDir}/${fileName}`;
+                    // Save image files directly to project directory with UUID
+                    const imageUuid = crypto.randomUUID();
+                    const imageName = `${imageUuid}${fileExt}`;
+                    const imagePath = `${projectDir}/${imageName}`;
                     const result = await saveFile(fileBuffer, imagePath);
                     
                     if (result) {
+                        const imageUrl = `http://localhost:8787/api/bucket/projects/${projectId}/${imageName}`;
+                        
+                        // Create task for the direct image upload
+                        const taskResult = await createTask(
+                            db,
+                            parseInt(projectId),
+                            imageUrl,
+                            'image',
+                            {
+                                originalFileName: originalFileName,
+                                mimeType: `image/${fileExt.substring(1)}`,
+                                uuid: imageUuid
+                            }
+                        );
+                          if (taskResult.success && taskResult.data) {
+                            createdTasks.push(taskResult.data);
+                        }
+                        
                         uploadedFiles.push({
                             type: 'image',
-                            fileName: fileName,
+                            uuid: imageUuid,
+                            fileName: imageName,
+                            originalFileName: originalFileName,
                             path: imagePath,
-                            url: `http://localhost:8787/api/bucket/projects/${projectId}/${fileName}`
+                            url: imageUrl,
+                            taskId: (taskResult.success && taskResult.data) ? taskResult.data.id : null
                         });
                     }
                 } else {
                     // Skip non-image files
                     uploadedFiles.push({
                         type: 'skipped',
-                        fileName: fileName,
+                        fileName: originalFileName,
                         message: 'File skipped - only images and zip files are allowed'
                     });
                 }
@@ -197,6 +253,7 @@ app.post('/uploadData', async (c) => {
             message: 'Upload completed',
             projectId: projectId,
             uploadedFiles: uploadedFiles,
+            createdTasks: createdTasks.length,
             projectDir: projectDir
         });
     } catch (error) {
@@ -211,11 +268,11 @@ app.post('/uploadData', async (c) => {
     }
 });
 
-// Get project files
-app.get('/projects/:projectId/:fileName', (c) => {
+// Get project files (now supports both UUID and original filename lookup)
+app.get('/taskData', (c) => {
     try {
-        const projectId = c.req.param('projectId');
-        const fileName = c.req.param('fileName');
+        const projectId = c.req.header('projectId');
+        const fileName = c.req.header('fileName');
         
         if (!projectId || !fileName) throw new Error('Project ID and file name are required');
         
@@ -237,6 +294,8 @@ app.get('/projects/:projectId/:fileName', (c) => {
             contentType = 'image/gif';
         } else if (fileExt === '.webp') {
             contentType = 'image/webp';
+        } else if (fileExt === '.bmp') {
+            contentType = 'image/bmp';
         }
 
         return c.body(fileBuffer, 200, {
