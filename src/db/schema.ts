@@ -121,8 +121,10 @@ export const projects = sqliteTable('projects', {
     description: text('description'),
     projectType: int('project_type')
         .notNull()
-        .references(() => projectType.id), //this will reference a project type table
-    labelConfig: text('label_config'), //this will be a json string
+        .references(() => projectType.id),
+    labelConfig: text('label_config').$type<{
+        classes: string[];
+    }>(),
     createdAt: int({ mode: 'number' })
         .notNull()
         .default(sql`(unixepoch())`),
