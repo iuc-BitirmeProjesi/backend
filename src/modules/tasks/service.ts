@@ -1,5 +1,5 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
-import { eq, and, desc, isNull } from 'drizzle-orm';
+import { eq, and, desc, isNull, not, gt } from 'drizzle-orm';
 import { tasks, projects, users } from '../../db/schema';
 import fs from 'fs';
 
@@ -98,7 +98,7 @@ export const getUnassignedTasks = async (db: LibSQLDatabase, projectId: number) 
 // Get task by ID
 export const getTaskById = async (db: LibSQLDatabase, taskId: number) => {
     try {
-        const result = await db
+        const task = await db
             .select({
                 id: tasks.id,
                 projectId: tasks.projectId,
@@ -114,7 +114,31 @@ export const getTaskById = async (db: LibSQLDatabase, taskId: number) => {
             .from(tasks)
             .where(eq(tasks.id, taskId))
             .get();
-        
+    
+            if (!task) {
+            throw new Error(`Task with ID ${taskId} not found`);
+        }
+        const nextTask = await db
+            .select({
+                id: tasks.id
+            })
+            .from(tasks)
+            .where(
+                and(
+                    eq(tasks.projectId, task.projectId),
+                    eq(tasks.status, 'annotating'),
+                    gt(tasks.id, taskId)
+                )
+            )
+            .orderBy(desc(tasks.priority), desc(tasks.createdAt))
+            .limit(1)
+            .get();
+
+        const result = {
+            ...task,
+            nextTaskId: nextTask ? nextTask.id : null
+        }
+
         return { data: result, success: true };
     } catch (error: any) {
         console.error('Error getting task by ID:', error);

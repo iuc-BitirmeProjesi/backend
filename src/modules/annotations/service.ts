@@ -103,3 +103,33 @@ export const getAnnotationsByTaskId = async (
 //Update annotation
 
 //delete annotation
+export const deleteAnnotation = async (
+    db: LibSQLDatabase,
+    userId: number,
+    annotationId: number
+) => {
+    try {
+        // First check if the annotation exists and belongs to the user
+        const existingAnnotation = await db
+            .select()
+            .from(annotations)
+            .where(and(eq(annotations.id, annotationId), eq(annotations.userId, userId)))
+            .get();
+        
+        if (!existingAnnotation) {
+            return { error: 'Annotation not found or you do not have permission to delete it', success: false };
+        }
+        
+        // Delete the annotation
+        const result = await db
+            .delete(annotations)
+            .where(eq(annotations.id, annotationId))
+            .returning()
+            .get();
+        
+        return { data: result, success: true };
+    } catch (error) {
+        console.error('Error deleting annotation:', error);
+        return { error: error.message || 'Failed to delete annotation', success: false };
+    }
+};

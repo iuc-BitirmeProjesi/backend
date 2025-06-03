@@ -167,7 +167,7 @@ app.post('/:taskId/unassign', async (c) => {
 });
 
 // Complete task
-app.post('/:taskId/complete', async (c) => {
+app.post('/complete/:taskId', async (c) => {
     try {
         const db = c.var.db;
         const taskId = Number(c.req.param('taskId'));
