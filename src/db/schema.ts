@@ -129,7 +129,9 @@ export const projects = sqliteTable('projects', {
     projectType: int('project_type')
         .notNull()
         .references(() => projectType.id),
-    labelConfig: text('label_config').$type<{
+    labelConfig: text('label_config', {
+        mode: "json",
+    }).$type<{
         classes: string[];
     }>(),
     createdAt: int({ mode: 'number' })

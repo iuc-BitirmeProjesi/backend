@@ -44,9 +44,12 @@ export const getProjects = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting projects:', error);
-        return { error: error.message || 'Failed to retrieve projects', success: false };
+        return {
+            error: error.message || 'Failed to retrieve projects',
+            success: false,
+        };
     }
-}
+};
 
 //get project by id
 export const getProjectById = async (
@@ -59,10 +62,7 @@ export const getProjectById = async (
             .select()
             .from(projects)
             .where(
-                and(
-                    eq(projects.id, id),
-                    eq(projectRelations.userId, userId)
-                )
+                and(eq(projects.id, id), eq(projectRelations.userId, userId))
             )
             .innerJoin(
                 projectRelations,
@@ -72,9 +72,12 @@ export const getProjectById = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error getting project by id:', error);
-        return { error: error.message || 'Failed to retrieve project', success: false };
+        return {
+            error: error.message || 'Failed to retrieve project',
+            success: false,
+        };
     }
-}
+};
 
 //create project (also insert into project relations with transaction when inserting into projects)
 export const createProject = async (
@@ -89,18 +92,12 @@ export const createProject = async (
             // Insert into projects table
             const result = await tx
                 .insert(projects)
-                .values({
-                    organizationId: projectData.organizationId,
-                    name: projectData.name,
-                    description: projectData.description,
-                    projectType: projectData.projectType,
-                })
+                .values(projectData)
                 .returning()
                 .get();
 
             // Insert into project_relations table
-            await tx.insert(projectRelations)
-            .values({
+            await tx.insert(projectRelations).values({
                 userId: userId,
                 projectId: result.id,
                 roleId: 1, // Assuming 1 is the admin role ID
@@ -113,9 +110,12 @@ export const createProject = async (
         return { data: res, success: true };
     } catch (error) {
         console.error('Error creating project:', error);
-        return { error: error.message || 'Failed to create project', success: false };
+        return {
+            error: error.message || 'Failed to create project',
+            success: false,
+        };
     }
-}
+};
 
 //update project
 export const updateProject = async (
@@ -125,17 +125,16 @@ export const updateProject = async (
     userId: number
 ) => {
     try {
-
-         // auth control
+        // auth control
         const authorized = await db
             .select()
             .from(projects)
-            .innerJoin(projectRelations, eq(projects.id, projectRelations.projectId))
+            .innerJoin(
+                projectRelations,
+                eq(projects.id, projectRelations.projectId)
+            )
             .where(
-                and(
-                    eq(projects.id, id),
-                    eq(projectRelations.userId, userId)
-                )
+                and(eq(projects.id, id), eq(projectRelations.userId, userId))
             )
             .get();
 
@@ -145,12 +144,7 @@ export const updateProject = async (
 
         const result = await db
             .update(projects)
-            .set({
-                organizationId: projectData.organizationId,
-                name: projectData.name,
-                description: projectData.description,
-                projectType: projectData.projectType,
-            })
+            .set(projectData)
             .where(eq(projects.id, id))
             .returning()
             .get();
@@ -158,9 +152,12 @@ export const updateProject = async (
         return { data: result, success: true };
     } catch (error) {
         console.error('Error updating project:', error);
-        return { error: error.message || 'Failed to update project', success: false };
+        return {
+            error: error.message || 'Failed to update project',
+            success: false,
+        };
     }
-}
+};
 
 //delete project (also delete from project relations with transaction when deleting from projects with auth control and check if project exists)
 export const deleteProject = async (
@@ -177,17 +174,17 @@ export const deleteProject = async (
             .get();
 
         if (!project) throw new Error('Project not found');
-        
+
         // auth control
         const authorized = await db
             .select()
             .from(projects)
-            .innerJoin(projectRelations, eq(projects.id, projectRelations.projectId))
+            .innerJoin(
+                projectRelations,
+                eq(projects.id, projectRelations.projectId)
+            )
             .where(
-                and(
-                    eq(projects.id, id),
-                    eq(projectRelations.userId, userId)
-                )
+                and(eq(projects.id, id), eq(projectRelations.userId, userId))
             )
             .get();
 
@@ -196,20 +193,26 @@ export const deleteProject = async (
         // Start a transaction
         const result = await db.transaction(async (tx) => {
             // Delete from project_relations table
-            await tx.delete(projectRelations).where(eq(projectRelations.projectId, id));
+            await tx
+                .delete(projectRelations)
+                .where(eq(projectRelations.projectId, id));
 
             // Delete from projects table
-            const result = await tx.delete(projects).where(eq(projects.id, id)).returning().get();
+            const result = await tx
+                .delete(projects)
+                .where(eq(projects.id, id))
+                .returning()
+                .get();
             return { data: result, success: true };
         });
 
-       if (!result.success) throw new Error('Failed to delete organization');
-       return { data: result.data, success: true };
-       
+        if (!result.success) throw new Error('Failed to delete organization');
+        return { data: result.data, success: true };
     } catch (error) {
         console.error('Error deleting project:', error);
-        return { error: error.message || 'Failed to delete project', success: false };
+        return {
+            error: error.message || 'Failed to delete project',
+            success: false,
+        };
     }
-}
-
-
+};
