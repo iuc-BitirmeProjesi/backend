@@ -62,6 +62,7 @@ app.post('/', async (c) => {
             name: body.name,
             description: body.description,
             projectType: body.projectType,
+            labelConfig: body.labelConfig,
         };
 
         const result = await createProject(db, projectData, userId);
@@ -92,6 +93,7 @@ app.put('/:id', async (c) => {
             name: body.name,
             description: body.description,
             projectType: body.projectType,
+            labelConfig: body.labelConfig,
         };
 
         const result = await updateProject(db,projectData, Number(id),  userId);
