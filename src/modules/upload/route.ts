@@ -146,7 +146,9 @@ app.post('/uploadData', async (c) => {
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
 
         for (const file of files) {
-            if (file instanceof File) {
+            // In Node.js, form data files are not File instances
+            // Instead, check if the file has the expected properties
+            if (file && typeof file === 'object' && 'arrayBuffer' in file && 'name' in file) {
                 const fileBuffer = await file.arrayBuffer();
                 const originalFileName = file.name || 'unknown';
                 const fileExt = path.extname(originalFileName).toLowerCase();
@@ -356,7 +358,9 @@ app.post('/uploadDataVideo', async (c) => {
         const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv'];
 
         for (const file of files) {
-            if (file instanceof File) {
+            // In Node.js, form data files are not File instances
+            // Instead, check if the file has the expected properties
+            if (file && typeof file === 'object' && 'arrayBuffer' in file && 'name' in file) {
                 const fileBuffer = await file.arrayBuffer();
                 const originalFileName = file.name || 'unknown';
                 const fileExt = path.extname(originalFileName).toLowerCase();
