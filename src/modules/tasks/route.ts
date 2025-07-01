@@ -3,7 +3,6 @@ import type { Variables } from '../../types';
 import {
     getTasksByProject,
     getTasksByUser,
-    getUnassignedTasks,
     getTaskById,
     createTask,
     updateTask,
@@ -11,7 +10,8 @@ import {
     unassignTask,
     completeTask,
     deleteTask,
-    getTaskStats
+    getTaskStats,
+    exportDataset
 } from './service';
 
 const app = new Hono<{ Variables: Variables }>();
@@ -220,6 +220,51 @@ app.get('/stats/:projectId', async (c) => {
     } catch (error) {
         console.error('Error in get task stats route:', error);
         return c.json({ error: 'Failed to retrieve task statistics', details: error.message }, 500);
+    }
+});
+
+// Export dataset for a project
+app.post('/export/:projectId', async (c) => {
+    try {
+        const db = c.var.db;
+        const projectId = Number(c.req.param('projectId'));
+        
+        // Get format from header, default to 'yolo'
+        const format = c.req.header('export-format') || c.req.query('format') || 'yolo';
+        
+        // Get split configuration from request body
+        const body = await c.req.json().catch(() => ({}));
+        const splitConfig = body.splitConfig;
+        
+        if (!projectId) throw new Error('Project ID is required');
+        
+        const result = await exportDataset(db, projectId, format, splitConfig);
+
+        if (!result.success) throw new Error(result.error);
+
+        // Return the ZIP file as download
+        if (result.data?.zipPath) {
+            const fs = await import('fs');
+            
+            const zipBuffer = fs.readFileSync(result.data.zipPath);
+            const filename = `${result.data.projectName || 'dataset'}_${format}_${Date.now()}.zip`;
+            
+            // Set headers for file download
+            c.header('Content-Type', 'application/zip');
+            c.header('Content-Disposition', `attachment; filename="${filename}"`);
+            c.header('Content-Length', zipBuffer.length.toString());
+            
+            // Clean up the temporary ZIP file
+            fs.unlinkSync(result.data.zipPath);
+            
+            return c.body(zipBuffer);
+        } else {
+            // If no ZIP file was created, return JSON response
+            return c.json({ data: result.data });
+        }
+    } catch (error) {
+        console.error('Error in export dataset route:', error);
+        return c.json({ error: 'Failed to export dataset', details: error.message }, 500);
     }
 });
 
